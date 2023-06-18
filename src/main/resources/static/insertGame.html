@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" href="css/eui.css">
+</head>
+<body>
+<div id="app">
+  <el-page-header style="background-color: #0095d7;
+  color: white;height: 60px;line-height: 60px;font-weight: bold" @back="goBack" content="添加游戏页面">
+  </el-page-header>
+  <!--分割线-->
+  <el-divider></el-divider>
+  <el-card>
+
+    <el-form>
+      <el-form-item label="游戏名称" label-width="80px">
+        <el-input v-model="game.name"></el-input>
+      </el-form-item>
+      <el-form-item label="游戏简介" label-width="80px">
+        <el-input v-model="game.content"></el-input>
+      </el-form-item>
+      <el-form-item label="现价" label-width="80px">
+        <el-input v-model="game.cur_price"></el-input>
+      </el-form-item>
+      <el-form-item label="原价" label-width="80px">
+        <el-input v-model="game.old_price"></el-input>
+      </el-form-item>
+      <el-form-item label="折扣" label-width="80px">
+        <el-input v-model="game.discount"></el-input>
+      </el-form-item>
+      <el-form-item label="销量" label-width="80px">
+        <el-input v-model="game.sale_count"></el-input>
+      </el-form-item>
+      <el-form-item label="游戏海报" label-width="80px">
+        <img :src="game.img_title_url" style="width: 150px ; height: 100px;"><br>
+        <el-button size="mini" @click="amend()">添加海报</el-button>
+      </el-form-item>
+      <el-form-item label="游戏图片" label-width="80px">
+        <!--选择图片组件开始-->
+        <!--limit=1设置只能选择一张图片-->
+        <el-upload
+                limit="4"
+                action="/upload"
+                name="picFile"
+                list-type="picture-card"
+                :on-preview="handlePictureCardPreview"
+                :on-success="handleSuccess"
+                :on-exceed="exceed"
+                :on-remove="handleRemove">
+          <i class="el-icon-plus"></i>
+        </el-upload>
+        <el-dialog :visible.sync="dialogVisible">
+          <img width="100%" :src="dialogImageUrl" alt="">
+        </el-dialog>
+        <!--选择图片组件结束-->
+      </el-form-item>
+      <!--游戏分类-->
+      <!--单选框-->
+      <el-form-item label="游戏主类" label-width="80px" >
+        <template >
+          <el-radio-group v-model="radio" v-for="s in sortTitleArr" >
+            <span @click="chooseSortTitle(s.title)">
+              <el-radio :label="s.title" style="margin-left: 10px">{{s.title}}</el-radio>
+            </span>
+          </el-radio-group>
+        </template>
+      </el-form-item>
+      <!--单选框结束-->
+      <!--复选框-->
+      <el-form-item label="游戏分类" label-width="80px">
+        <template >
+          <el-checkbox-group v-model="checkList" v-for="item in sortItemArr">
+            <el-checkbox :label="item.sort_id">{{item.sort_item}}</el-checkbox>
+          </el-checkbox-group>
+          <!--测试用-->
+         <!-- <el-button @click="sed" type="success">游戏</el-button>-->
+        </template>
+      </el-form-item>
+      <!--复选框结束-->
+      <el-form-item label="游戏视频" label-width="80px">
+        <el-input v-model="video.game_video"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="send" type="success">添加游戏</el-button>
+      </el-form-item>
+    </el-form>
+  </el-card>
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<!-- import JavaScript -->
+<script src="js/eui.js"></script>
+<script src="js/axios.min.js"></script>
+<script>
+  let v = new Vue({
+    el: '#app',
+    data() {
+      return {
+        dialogImageUrl: '',
+        dialogVisible: false,
+        urls:"",
+        categoryArr:[],
+        game:{
+          name:"",
+          content:"",
+          sale_count:0,
+          discount:"",
+          old_price:0,
+          cur_price:0,
+          img_title_url:"",
+          status:"",
+          small_imgs:"",
+          mid_img:"",
+        },
+        radio:"",
+        sortTitleArr:[],
+        sortItemArr:[],
+        checkList:[],
+        picUrl:"",
+        video:{
+          game_id:0,
+          game_video:"",
+        },
+        item:[],
+        movice:"",
+        picc:"",
+      };
+    },
+    created:function(){
+      //查询游戏的主分类
+      axios.get("/sortTitle/select").then(function (response) {
+        v.game.img_title_url=location.search.split("=")[1];
+        v.sortTitleArr = response.data;
+        v.radio = v.sortTitleArr[0].title
+        v.chooseSortTitle(v.radio);
+      })
+      axios.get("/sort/selectByGameId?gameId="+gameId).then(function (response) {
+        v.item = response.data;
+      })
+
+
+    },
+    methods: {
+      handleRemove(file, fileList) {
+        console.log(file, fileList);
+        axios.get("/remove?name=" + file.response).then(function (response) {
+          console.log("删除完成!");
+        })
+        //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+        let arr = [];
+        for (let file of fileList) {
+          //push往数组中添加元素 file.response图片路径
+          arr.push(file.response);
+        }
+        //把数组中多个图片路径 合并成一个字符串赋值给urls
+        v.urls = arr.toString();
+
+      },
+      handlePictureCardPreview(file) {
+        this.dialogImageUrl = file.url;
+        this.dialogVisible = true;
+      },
+      handleSuccess(response,file, fileList) {
+        //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+        let arr = [];
+        for (let file of fileList) {
+          //push往数组中添加元素 file.response图片路径
+          arr.push(file.response);
+        }
+        //把数组中多个图片路径 合并成一个字符串赋值给urls
+        v.urls = arr.toString();
+      },
+      send(){
+        if(v.game.name==""){
+          alert("游戏名字不能为空,请重新输入")
+          return;
+        }
+        if (v.game.cur_price==0){
+          alert("请输入现在价格")
+          return;
+        }
+        if (v.game.img_title_url==""){
+          alert("请选择游戏海报")
+          return;
+        }
+        if(v.game.small_imgs){
+          alert("请添加游戏图片")
+          return;
+        }
+        if (v.checkList==""){
+          alert("请选择游戏分类")
+          return;
+        }
+        v.game.small_imgs = v.urls;
+        axios.post("/game/insert",v.game).then(function (response) {
+          if (response.data == 1){
+            axios.get("/game/selectByGameName?name=" + v.game.name).then(function (response) {
+              let gameId = response.data;
+              let data = new FormData();
+              data.append("game_id", gameId);
+              data.append("list", v.checkList);
+              axios.post("/gameSort/insert", data).then(function (response) {
+
+              })
+              v.video.game_id = gameId
+              axios.post("/video/insert",v.video).then(function () {
+                location.href="/admin.html"
+
+              })
+            })
+          }
+        })
+
+      },
+      goBack(){
+        history.back();//返回上一页面
+      },
+      exceed(){
+        v.$message.error("图片只能选择4个!");
+      },
+      amend(){
+        location.href="insertTitlePic.html";
+      },
+      chooseSortTitle(title){
+        axios.get("/sort/selectItemByTitle?title="+title).then(function (response) {
+          v.sortItemArr = response.data;
+          v.checkList=[];
+        })
+      },
+      //测试用
+      sed(){
+
+        alert(v.game.img_title_url)
+
+      }
+    }
+  })
+</script>
+</html>

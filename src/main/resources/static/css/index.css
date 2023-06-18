@@ -1,0 +1,146 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f4;
+    font-family: PingFangSC-Regular, Helvetica, Arial, "Microsoft Yahei", sans-serif;
+    /*-webkit-text-size-adjust:none;*/
+    font-size: 16px;
+}
+
+a {
+    text-decoration: none;
+    color: #454545;
+}
+
+.nav {
+    border-radius: 3px;
+    background: linear-gradient(90deg, rgb(218, 84, 74) 11.38%, rgb(179, 67, 59) 25.23%, rgb(135, 32, 24) 100%);
+    overflow: hidden;
+    padding: 2px 2px 2px 2px;
+    margin-top: 16px;
+    position: relative;
+}
+
+.nav_lab {
+    width: 90px;
+    height: 100%;
+    padding: 0 10px 0 10px;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ededed;
+    /*margin-right: 36px;*/
+    line-height: 38px;
+    text-align: center;
+}
+
+.nav_lab:hover {
+    background-color: #ff5349;
+}
+
+.nav > input {
+    width: 220px;
+    height: 34px;
+    display: inline-block;
+    float: right;
+    border: 1px solid rgba(255, 135, 32, 0.09);
+    border-radius: 4px;
+    outline: none;
+    padding-left: 14px;
+    font-size: 16px;
+    font-style: italic;
+    background-color: #700f0f;
+    caret-color: #f4f4f4; /*修改光标颜色*/
+}
+
+.nav > input:hover {
+    border: 1px solid #f40000;
+}
+
+.nav > input::-webkit-input-placeholder {
+    color: #d64949; /*修改占位符文字颜色*/
+}
+
+.nav > img {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    cursor: pointer;
+}
+
+.detail_btn {
+    float: right;
+    margin-right: 20px;
+    border: none;
+    border-radius: 2px;
+    color: #ededed;
+    font-size: 12px;
+    font-weight: lighter;
+    text-align: center;
+    width: 80px;
+    height: 30px;
+    line-height: 30px;
+    background-color: #4b91ba;
+    cursor: pointer;
+}
+
+.detail_btn:hover {
+    background-color: #56a9db;
+    color: #FFFFFF;
+}
+
+#discount_por {
+    background-color: #4c6b22;
+    color: #a4d007;
+    font-size: 26px;
+    border-radius: 2px 0 0 2px;
+    padding: 0 5px;
+    margin-top: 10px;
+}
+
+#price_por {
+    margin-top: 10px;
+    background-color: rgba(76, 173, 218, 0.6);
+    border-radius: 0 2px 2px 0;
+    padding: 0 5px;
+}
+
+#suspend_nav {
+    height: 300px;
+    width: 1209px;
+    color: white;
+    position: absolute;
+    left: 317px;
+    top: -2px;
+    z-index: 6;
+    padding: 16px 30px;
+    background: linear-gradient(180deg, rgb(215, 115, 116) 11.38%, rgb(201, 81, 83) 35.23%, rgb(147, 56, 55) 100%);
+    font-size: 14px;
+    display: block;
+    animation:suspend_nav 0.8s 1;
+}
+@keyframes suspend_nav{
+    0%{opacity: 0;}
+    100%{opacity: 1;}
+}
+
+
+.sort_title {
+    overflow: hidden;
+    padding-bottom: 16px;
+}
+
+.sort_item {
+    display: inline;
+    padding: 12px;
+}
+
+.sort_item>a{
+    color: rgba(230, 230, 230, 0.9);
+}
+
+.sort_item>a:hover {
+    color: white;
+    cursor: pointer;
+}
+

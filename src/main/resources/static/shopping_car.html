@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>购物车</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!--    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+    <script src="js/vue.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        /*.el-col{
+            border: 1px solid red;
+        }*/
+        .el-main {
+            padding: 0;
+        }
+
+        #vline {
+            background-color: #b2b2b2;
+        }
+
+        /*.b {
+            background: linear-gradient(
+                    90deg, rgb(218, 84, 74) 11.38%, rgb(179, 67, 59) 25.23%, rgb(135, 32, 24) 100%);
+            color: #fafafa;
+        }*/
+
+        .line_divider {
+            background: linear-gradient(90deg, rgba(15, 33, 110, 0.919) 11.38%, rgba(56, 97, 135, 0.8) 25.23%, rgb(240, 240, 244) 100%);
+            margin: 0 0 30px 0;
+        }
+
+        /*删除超链接*/
+        .a_remove {
+            font-size: 10px;
+            color: #666666;
+            text-decoration: underline;
+        }
+
+        .a_remove:hover {
+            color: #242424;
+        }
+
+        /*游戏行框架*/
+        .game_frame {
+            border-bottom: 1px solid #2A475E;
+            padding: 12px 20px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        /*游戏图片*/
+        .game_img {
+            width: 120px;
+            height: 45px;
+            float: left;
+            display: block;
+        }
+
+        /*游戏名*/
+        .game_name {
+            float: left;
+            display: block;
+            color: #333333;
+            font-size: 14px;
+            margin: 6px 0 0 14px;
+        }
+
+        /*游戏价格*/
+        .game_price {
+            font-size: 14px;
+            float: right;
+            color: #333333;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .recommend_frame {
+            /*border: 1px solid red;*/
+            position: relative;
+        }
+
+        .pay_btn {
+            background-color: #92c288;
+            padding: 4px 20px;
+            margin-left: 12px;
+            color: #f1f1f1;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .pay_btn:hover {
+            background-color: #5fc04a;
+            color: white;
+        }
+        label.el-checkbox {
+            float: left;
+            margin-top: 14px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--顶部-->
+    <el-container>
+        <!--logo 登陆/注册链接-->
+        <el-header height="100px" style="margin: 10px 0;padding: 0">
+            <el-row style="margin-top: 10px" type="flex" justify="center">
+                <!--logo-->
+                <el-col :span="8">
+                    <img src="./imgs/logo.png" alt="">
+                </el-col>
+                <!--登录/注册-->
+                <el-col :span="8">
+                    <!--已登录-->
+                    <div v-if="isLogin" style="float: right; line-height: 96px;color: #454545">
+                        <span>你好!  {{user.nickname}}</span>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="shopping_car.html">游戏盒</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="javascript:void(0)" @click="logout()">退出登录</a>
+                        <a href="user_info.html"
+                           style="display: block;width:36px;height:36px;margin-top: 26px;float:right;margin-left: 20px;border: 2px solid #da544a;position: relative">
+                            <img :src="user.user_avatar_url" width="100%" height="100%" style="position: absolute;">
+                        </a>
+                    </div>
+                    <!--未登录-->
+                    <div v-else style="float: right; line-height: 96px">
+                        <a href="/login.html">登录</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="">注册</a>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div class="nav">
+                    <a href="index.html" class="nav_lab">游戏商店</a>
+                    <a href="javascript:void(0)" class="nav_lab" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">游戏分类</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(1)">热销游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(2)">新品游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(3)">优惠游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab">游戏机和配件</a>
+                    <input type="text" placeholder="搜索" v-model="search">
+                    <img src="./imgs/search_icon.png" alt="" @click="searchSend()">
+                </div>
+            </el-col>
+        </el-row>
+
+        <!--悬浮导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div id="suspend_nav" v-show="isShow" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">
+                    <div class="sort_title" v-for="i in sort">
+                        <!--分类标题-->
+                        <div style="float: left;font-weight: bold;">{{i.sort_title}}</div>
+                        <!--分类子项-->
+                        <div style="float: left;width: 1120px;border-bottom: 1px dashed white;padding-bottom: 16px;float: right">
+                            <div class="sort_item" v-for="j in i.sort_item"><a :href="'/classify.html?sort_item='+j">{{j}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </el-col>
+        </el-row>
+        <!--游戏盒标题-->
+        <el-row justify="center" type="flex" style="margin-top: 40px">
+            <el-col :span="16">
+                <div style="font-size: 24px;margin-bottom: 10px">您的游戏盒</div>
+                <el-divider class="line_divider"></el-divider>
+            </el-col>
+        </el-row>
+        <!--游戏盒中的游戏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="10">
+                <el-checkbox-group v-model="order.checkList">
+                    <div class="game_frame" v-for="i in gameData" ref="table">
+                        <!--多选框-->
+                        <el-checkbox :label="i.game_id" @change="checked=>checkRow(checked, i.cur_price)"><div></div></el-checkbox>
+                        <!--游戏图片-->
+                        <img class="game_img" :src="i.img_title_url">
+                        <!--游戏名-->
+                        <span class="game_name">{{i.name}}</span>
+                        <!--价格-->
+                        <div class="game_price">
+                            <div style="">{{i.cur_price}}</div>
+                            <a href="javascript:void(0)" class="a_remove" @click="remover(i.id)">移除</a>
+                        </div>
+                        <!--操作系统图标-->
+                        <img src="imgs/windows.png" width="20px" height="20px" style="float: right;margin: 6px 40px 0 0;">
+                    </div>
+                </el-checkbox-group>
+                <!--付款栏-->
+                <el-row style="border-bottom: 1px solid #2A475E;">
+                    <el-col :span="24" style="padding: 34px 20px 12px 20px;color: #333333;">
+                        <div style="overflow:hidden;">
+                            <div style="float: left;font-size: 14px">预计总额</div>
+                            <div style="float: right;font-size: 14px">{{order.aggregate}}</div>
+                        </div>
+                        <!--付款按钮-->
+                        <div style="float: right;margin-top: 20px">
+                            <button class="pay_btn" @click="Jump()">继续购物</button>
+                            <button class="pay_btn" @click="pay()">付款</button>
+                        </div>
+                    </el-col>
+                </el-row>
+            </el-col>
+            <!--侧边-->
+            <el-col :span="6">
+                <div class="recommend_frame" v-for="i in gameArr">
+                    <a :href="'detail.html?id='+i.game_id">
+                        <div style="position: absolute;top:6px;left:40px;overflow: hidden;background-color: #0A212E;border-radius: 2px;padding: 4px;width: 66px;">
+                            <img src="imgs/rank.png" width="20px" style="display: block;float: left">
+                            <span style="display: block;float: left;font-size: 18px;color: #dddddd;margin-left: 6px">{{i.sale_count}}</span>
+                        </div>
+                        <img :src="i.img_title_url" width="400px" style="display:block;margin: 28px auto 0 auto;">
+                        <!--详细信息-->
+                        <div style="background: linear-gradient(0deg, rgba(14,64,168,0.72) 31.38%, rgba(34,91,197,0.8) 55.23%, rgb(146,172,223) 100%);
+                                margin: 0 auto;width: 388px;height: 36px;padding: 6px">
+                            <!--左部折扣信息-->
+                            <div style="overflow: hidden;float: left">
+                                <div style="background: #4c6b22;color: #a4d007;padding: 6px;font-size: 20px;width: 48px;float: left">
+                                    {{i.discount}}
+                                </div>
+                                <div style="background: #000000;color: #999999;padding: 6px;float: left;height: 27px;font-size: 10px;margin-top: -4px">
+                                    <div style="text-decoration: line-through">{{i.old_price}}</div>
+                                    <div style="color: #acdbf5">{{i.cur_price}}</div>
+                                </div>
+                            </div>
+                            <!--右部特惠-->
+                            <div style="color: #c6d4df;float: right;line-height: 36px">特惠热门！</div>
+                        </div>
+                    </a>
+                </div>
+            </el-col>
+        </el-row>
+    </el-container>
+</div>
+
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                navArr: ["热销游戏", "新品游戏", "优惠游戏", "游戏机和配件"],
+                /*游戏对象*/
+                gameData: [],
+                /*侧边游戏*/
+                gameArr: [],
+                isLogin: false,
+                user: {},
+                isAgree: [],
+                order: {
+                    aggregate: 0,
+                    checkList: []
+                },
+                isShow: false,
+                search:"",
+                sort: [{sort_title: "动作", sort_item: ["动作类Rogue", "平台及奔跑", "格斗及武术", "清版动作", "第一人称射击", "第三人称射击", "街机及节奏"]},
+                    {sort_title: "角色扮演", sort_item: ["冒险角色扮演", "动作角色扮演", "回合制", "团队制", "日系角色扮演", "策略角色扮演", "类Rogue"]},
+                    {sort_title: "策略", sort_item: ["军事", "卡牌及桌游", "即时战略", "回合制策略", "城市及定居点", "塔防", "大战略及 4X"]},
+                    {sort_title: "冒险及休闲", sort_item: ["休闲", "冒险", "冒险角色扮演", "剧情丰富", "类银河战士恶魔城", "视觉小说", "解谜"]},
+                    {sort_title: "模拟", sort_item: ["农场及制作", "太空及飞行", "建造及自动化", "恋爱", "沙盒及物理", "爱好与工作", "生活及沉浸式"]},
+                    {sort_title: "体育及竞技", sort_item: ["体育模拟", "单人运动", "团队体育", "所有运动", "竞速", "竞速模拟", "钓鱼及狩猎"]}]
+            }
+        },
+        methods: {
+            splitSearch(param){
+                location.href = "split_search.html?param="+param;
+            },
+            /*搜索*/
+            searchSend(){
+                location.href = "result.html?name=" + v.search;
+            },
+            changeTrueShow() {
+                v.isShow = true;
+            },
+            changeFalseShow() {
+                v.isShow = false;
+            },
+            //移除器
+            remover(id) {
+                /*要改用户所对应购物车的信息*/
+                //this.aggregate-=price;
+                axios.get("/game/deleteById/" + id).then(function () {
+                    //删除游戏完再刷新一下购物车界面
+                    location.reload();
+                })
+            },
+            //继续购物跳转到首页
+            Jump() {
+                location.href = "/";
+            },
+
+            //选择要购买的游戏
+            checkRow(checked, price){
+                if (checked == true){
+                    v.order.aggregate += price;
+                }else {
+                    v.order.aggregate -= price;
+                }
+            },
+
+            //付款功能
+            pay() {
+                axios.post("/pay/submitOrder", v.order).then(function (response) {
+                    location.href = "payment.html?money=" + v.order.aggregate;
+                })
+            },
+            //退出登录
+            logout() {
+                if (confirm("您确认退出登录吗?退出后将返回至商城首页"))
+                    //发出退出登录请求
+                    axios.get("/logout").then(function (response) {
+                        v.isLogin = false;//修改这个变量 页面会自动跟着改变
+                        location.href = "/";
+                    })
+            }
+
+        },
+        created: function () {
+            axios.get("/game/select").then(function (response) {
+                v.gameArr = response.data;
+            })
+
+            //发请求获取当前登录的用户对象,如果有用户对象则代表登录过,反之就是未登录过
+            axios.get("/currentUser").then(function (response) {
+                //把当前登录的用户对象赋值给user
+                v.user = response.data;
+                //根据用户id去获取对应用户购物车里的游戏
+                axios.get("/game/" + v.user.user_id).then(function (response) {
+                    v.gameData = response.data;
+                })
+                //此时如果response的值是空字符串 代表未登录过
+                v.isLogin = response.data == "" ? false : true;
+            })
+
+        },
+
+
+    })
+</script>
+</body>
+</html>

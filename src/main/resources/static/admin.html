@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" href="css/eui.css">
+  <style>
+
+    .el-aside {
+      color: #333;
+    }
+    h1{
+      float: left;
+      font-size: 22px;
+      color: white;
+      margin: 0;
+    }
+    .el-header{
+      background-color: #0095d7;
+      color: #333;
+      line-height: 60px; /*实现垂直居中效果*/
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <el-container style="height: 500px; border: 1px solid #eee">
+    <el-header style="text-align: right; font-size: 12px">
+      <h1>GameSoul商城后台管理系统</h1>
+
+      <span>欢迎{{user.nick}}回来!</span>
+      <a href="javascript:void(0)" @click="logout()">退出登录</a>
+    </el-header>
+
+    <el-container>
+      <el-aside width="200px" style="background-color: rgb(238, 241, 246)">
+        <el-menu :default-openeds="[openIndex]" @select="menuChange">
+          <el-submenu index="1">
+            <template slot="title"><i class="el-icon-s-flag"></i>分类管理</template>
+            <div v-for="s in sortTitleArr">
+              <el-menu-item :index="s.title" @click="selectSorItem(s.title)">{{s.title}}</el-menu-item>
+            </div>
+            <el-menu-item index="1-2">添加主类</el-menu-item>
+          </el-submenu>
+
+          <el-submenu index="2">
+            <template slot="title"><i class="el-icon-shopping-cart-2"></i>游戏管理</template>
+            <el-menu-item index="2-1">游戏列表</el-menu-item>
+            <el-menu-item index="2-2">添加游戏</el-menu-item>
+          </el-submenu>
+          <el-submenu index="3">
+            <template slot="title"><i class="el-icon-shopping-cart-2"></i>后台管理员</template>
+            <el-menu-item index="3-1">管理员列表</el-menu-item>
+          </el-submenu>
+
+        </el-menu>
+      </el-aside>
+
+      <el-main>
+        <div v-for="s in sortTitleArr">
+          <el-table v-show="index==s.title" :data="sortItemArr">
+            <!--设置表格的第一列为编号/序号  label相当于表头-->
+            <el-table-column type="index" label="编号" width="140">
+            </el-table-column>
+            <!--prop代表数组中对象的属性名-->
+            <el-table-column prop="sort_item" label="分类名称">
+            </el-table-column>
+            <el-table-column label="操作">
+              <!--scope对象中会装着当前遍历的信息-->
+              <template slot-scope="scope">
+                <!--气泡确认组件 scope.$index代表遍历对象在数组中的下标
+                scope.row代表当前遍历的分类对象-->
+                <el-popconfirm title="您确认删除此分类吗?"
+                               @confirm="categoryDelete(scope.$index,scope.row)">
+                  <el-button size="mini" type="danger" slot="reference">删除</el-button>
+                </el-popconfirm>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <el-button size="mini" style="margin-top: 12px; position: absolute;right: 510px;" @click="open()">添加分类</el-button>
+
+        <el-table v-show="index=='2-1'" :data="gameArr">
+          <el-table-column type="index" label="编号" width="50"></el-table-column>
+          <el-table-column prop="name" label="游戏名称" width="160">
+          </el-table-column>
+          <el-table-column prop="cur_price" label="价格" width="100">
+          </el-table-column>
+          <el-table-column prop="sale_count" label="销量" width="70">
+          </el-table-column>
+          <el-table-column label="游戏图片" width="150">
+            <!--template模板 scope里面装着遍历的对象-->
+            <template slot-scope="scope">
+              <!--scope.row得到当前遍历的对象-->
+              <img :src="scope.row.img_title_url" style="width: 100px" alt="">
+            </template>
+          </el-table-column>
+          <el-table-column label="操作">
+            <!--scope对象中会装着当前遍历的信息-->
+            <template slot-scope="scope">
+              <!--气泡确认组件 scope.$index代表遍历对象在数组中的下标
+              scope.row代表当前遍历的分类对象-->
+              <el-button size="mini" slot="reference" @click="amend(scope.row.game_id)">修改</el-button>
+              <el-popconfirm title="您确认删除此游戏吗?"
+                             @confirm="productDelete(scope.$index,scope.row.game_id)">
+                <el-button size="mini" type="danger" slot="reference">删除</el-button>
+              </el-popconfirm>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <el-table v-show="index=='3-1'" :data="Administrator">
+          <el-table-column type="index" label="编号" width="50"></el-table-column>
+          <el-table-column prop="username" label="用户名" width="160">
+          </el-table-column>
+          <el-table-column prop="mem_phone" label="手机号" width="150">
+          </el-table-column>
+          <el-table-column
+                  prop="identity"
+                  align="center"
+                  label="是否是管理员"
+                  width="120">
+            <template slot-scope="scope">
+              <el-switch
+                      v-model="scope.row.identity"
+                      active-color="#13ce66"
+                      inactive-color="#ccc"
+                      :active-value="0"
+                      :inactive-value="1">
+              </el-switch>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作">
+            <!--scope对象中会装着当前遍历的信息-->
+            <template slot-scope="scope">
+              <!--气泡确认组件 scope.$index代表遍历对象在数组中的下标
+              scope.row代表当前遍历的分类对象-->
+              <el-button size="mini" slot="reference" @click="transfer(scope.row)">修改</el-button>
+              <el-popconfirm title="您确认删除此用户吗?"
+                             @confirm="bannerDelete(scope.$index,scope.row.user_id)">
+                <el-button size="mini" type="danger" slot="reference">删除</el-button>
+              </el-popconfirm>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-main>
+    </el-container>
+  </el-container>
+<!--抽屉组件开始
+  direction:代表方向rtl(从右到左right to left) / ltr (左到右)/ ttb (上到下)/ btt(下到上)
+  size:弹出内容占屏幕的百分比
+  :visible.sync 让抽屉是否显示和一个变量进行绑定 true显示 false不显示
+-->
+  <el-drawer
+          title="主类类别"
+          :visible.sync="drawer"
+          direction="ttb"
+          size="25%">
+    <el-form>
+      <el-form-item label="分类名称" label-width="80px">
+          <el-input style="width: 500px" v-model="sortTitleName"></el-input>
+          <el-button type="success" @click="addSortTitle">添加</el-button>
+      </el-form-item>
+    </el-form>
+  </el-drawer>
+  <!--抽屉组件结束-->
+
+  <!--细分类抽屉组件开始
+  direction:代表方向rtl(从右到左right to left) / ltr (左到右)/ ttb (上到下)/ btt(下到上)
+  size:弹出内容占屏幕的百分比
+  :visible.sync 让抽屉是否显示和一个变量进行绑定 true显示 false不显示
+-->
+  <el-drawer
+          title="添加分类"
+          :visible.sync="drawer1"
+          direction="ttb"
+          size="25%">
+    <el-form>
+      <el-form-item label="分类名称" label-width="80px">
+        <el-input style="width: 500px" v-model="addSort.sort_item"></el-input>
+        <el-button type="success" @click="addSortItem()">添加</el-button>
+      </el-form-item>
+    </el-form>
+  </el-drawer>
+  <!--抽屉组件结束-->
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<!-- import JavaScript -->
+<script src="js/eui.js"></script>
+<script src="js/axios.min.js"></script>
+<script>
+  let v = new Vue({
+    el: '#app',
+    data() {
+
+      return {
+        productArr:[],
+        index:"",
+        sortTitleArr:[],
+        drawer:false,
+        drawer1:false,
+        sortTitleName:"",
+        bannerArr:[],
+        openIndex:"1",
+        user:{},
+        sortItemArr:[],
+        addSort:{
+          sort_title:"",
+          sort_item:""
+        },
+        gameArr:[],
+        Administrator:[],
+      }
+    },
+    created:function(){
+      //发请求得到当前登录的用户对象
+      axios.get("/currentUser").then(function (response) {
+        v.user = response.data;
+      })
+
+      //发送请求获取游戏
+      axios.get("/game/selectGame").then(function (response) {
+          v.gameArr= response.data;
+          console.log(v.gameArr)
+      })
+
+      //用户信息
+      axios.get("/user/selectByidentity").then(function (response) {
+          v.Administrator = response.data;
+
+      })
+
+
+      //得到地址栏中的参数 判断地址栏中是否包含index参数   2-1
+      if (location.search.indexOf('index')!=-1){
+        //从地址栏中的?index=2-1 取出2-1
+        this.index = location.search.split("=")[1];
+        //取出2-1里面的 2
+        this.openIndex = this.index.split("-")[0];
+      }
+
+        //发请求获取所有分类数据  this代表当前Vue对象
+      //此处的this不能用v代替  created方法执行时 v还没有赋值
+        this.loadSortTitle();
+    },
+    methods:{
+      addSortTitle(){//添加分类
+        //发出添加分类的请求
+        axios.get("/sortTitle/insert?title="+v.sortTitleName).then(function () {
+            v.drawer=false; //让抽屉收回
+            v.loadSortTitle();//重新加载分类信息
+        })
+      },
+      open(){
+        v.drawer1 = true;
+      },
+      addSortItem(){
+        v.addSort.sort_title = v.index;
+        axios.post("sort/insert",v.addSort).then(function (response) {
+          if (response.data==1){
+            alert("添加成功")
+            v.drawer1=false;
+            v.selectSorItem(v.addSort.sort_title)
+          }else {
+            alert("服务器忙请稍后再试")
+          }
+        })
+
+      },
+      loadSortTitle(){
+        axios.get("/sortTitle/select").then(function (response) {
+          v.sortTitleArr = response.data;
+          let name = v.sortTitleArr[0].title;
+          v.index = v.sortTitleArr[0].title;
+          axios.get("/sort/selectItemByTitle?title="+name).then(function (response) {
+            v.sortItemArr = response.data;
+          })
+        })
+      },
+      menuChange(index){
+        if (index=="1-2"){
+          v.drawer=true;
+        }else if(index=="2-2"){
+          location.href= "/insertGame.html"
+        }else if(index=="3-2"){
+          // location.href = "/insertProduct.html"
+        }else{
+          v.index = index;
+        }
+      },
+      categoryDelete(index,sort){
+        console.log(sort)
+        //发请求删除分类
+        axios.post("/sort/delete",sort).then(function (response) {
+          //重新加载分类数据 因为此处开了子线程删除分类,当此处代码执行时
+          //this 已经不是Vue对象了  只能使用v访问方法
+          v.loadSortTitle();
+          v.$message({
+            showClose:true,  //是否显示关闭按钮
+            message:"删除成功!",
+            type:"success"
+          })
+        })
+      },
+      //删除用户
+      bannerDelete(index,userId){
+        axios.get("/user/delete?userId="+userId).then(function (response) {
+            if(response.data==1){
+              axios.get("/user/selectByidentity").then(function (response) {
+                v.Administrator = response.data;
+              })
+              v.$message.success("删除轮播图完成!");
+            }else {
+              v.$message.error("删除失败请稍后再试!");
+            }
+
+        })
+      },
+      productDelete(index,gameId){
+        axios.get("/game/delete?gameId="+gameId).then(function (response) {
+          if (response.data==1){
+            v.$message.success("删除游戏完成!");
+            //发送请求获取游戏
+            axios.get("/game/selectGame").then(function (response) {
+              v.gameArr= response.data;
+              console.log(v.gameArr)
+            })
+          }else {
+            v.$message.error("删除失败请稍后再试!");
+          }
+
+        })
+      },
+      logout(){
+        axios.get("/logout").then(function () {
+          location.href="/";//回到首页
+        })
+      },
+      selectSorItem(title){
+        axios.get("/sort/selectItemByTitle?title="+title).then(function (response) {
+          v.sortItemArr = response.data;
+        })
+      },
+      amend(gameId){
+        location.href="/gameRedact.html?gameId="+gameId;
+      },
+      transfer(user){
+        console.log(user)
+        axios.post("/user/updateIdentityByUserId",user).then(function (response) {
+          if (response.data==1){
+            v.$message.success("修改成功!")
+            axios.get("/user/selectByidentity").then(function (response) {
+              v.Administrator = response.data;
+            })
+          }else {
+            v.$message.error("修改失败请稍后再试!");
+          }
+
+        })
+      }
+    }
+  })
+</script>
+</html>

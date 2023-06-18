@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" href="css/eui.css">
+</head>
+<body>
+<div id="app">
+  <el-page-header style="background-color: #0095d7;
+  color: white;height: 60px;line-height: 60px;font-weight: bold" @back="goBack" content="修改游戏海报">
+  </el-page-header>
+  <!--分割线-->
+  <el-divider></el-divider>
+  <el-card>
+    <!--选择图片组件开始-->
+    <!--limit=1设置只能选择一张图片-->
+    <el-upload
+            limit="1"
+            action="/upload"
+            name="picFile"
+            list-type="picture-card"
+            :on-preview="handlePictureCardPreview"
+            :on-success="handleSuccess"
+            :on-exceed="exceed"
+            :on-remove="handleRemove">
+      <i class="el-icon-plus"></i>
+    </el-upload>
+    <el-dialog :visible.sync="dialogVisible">
+      <img width="100%" :src="dialogImageUrl" alt="">
+    </el-dialog>
+    <!--选择图片组件结束-->
+    <el-button @click="send()">修改海报</el-button>
+  </el-card>
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<!-- import JavaScript -->
+<script src="js/eui.js"></script>
+<script src="js/axios.min.js"></script>
+<script>
+  let v = new Vue({
+    el: '#app',
+    data() {
+      return {
+        dialogImageUrl: '',
+        dialogVisible: false,
+        url:""
+      };
+    },
+    methods: {
+      handleRemove(file, fileList) {
+        console.log(file, fileList);
+        axios.get("/remove?name=" + file.response).then(function (response) {
+          console.log("删除完成!");
+          v.url="";
+        })
+
+      },
+      handlePictureCardPreview(file) {
+        this.dialogImageUrl = file.url;
+        this.dialogVisible = true;
+      },
+      handleSuccess(response,file, fileList) {
+        //response代表上传成功时服务器返回的图片路径
+        v.url=response;
+      },
+      send(){
+       //判断是否选择了图片
+        if (v.url==""){
+          v.$message.error("请选择上传的图片!");
+          return;
+        }
+        //修改游戏海报
+        let gameId = location.search.split("=")[1];
+        let data = new FormData();
+        data.append("game_id",gameId)
+        data.append("img_title_url",v.url)
+        axios.post("/game/updateTitle",data).then(function (response) {
+          if (response.data==1){
+            alert("修改成功")
+            location.href="/gameRedact.html?gameId="+gameId;
+          }else{
+            alert("系统忙请稍后再试")
+          }
+        })
+
+      },
+      goBack(){
+        history.back();//返回上一页面
+      },
+      exceed(){
+        v.$message.error("图片只能选择1个!");
+      }
+    }
+  })
+</script>
+</html>

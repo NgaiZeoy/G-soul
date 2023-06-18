@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!--    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+    <script src="js/vue.min.js"></script>
+    <script src="js/axios.min.js"></script>
+<!--    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>-->
+    <style>
+        /*.el-col{
+            border: 1px solid red;
+        }*/
+        .el-main{
+            padding: 0;
+        }
+        #vline{
+            background-color: #b2b2b2;
+        }
+        .login_title{
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #666666;
+        }
+        .warnText{
+            color: #cc5050;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        .el-input__inner{
+            background-color: #f0f0f4;
+        }
+        .el-input.is-active .el-input__inner, .el-input__inner:focus {
+            border-color: #f98f54;
+            outline: 0;
+        }
+
+        .login_icon{
+            position: absolute;
+            top: 32px;
+            left: 340px;
+        }
+        .login_btn{
+            font-size: 15px;
+            padding: 6px 60px;
+            background-color: #ffaf84;
+            border: none;
+            border-radius: 2px;
+            letter-spacing: 4px;
+            color: #eaeaea;
+        }
+        .login_btn:hover{
+            background-color: #f98f54;
+            color: #ffffff;
+        }
+        .reg_btn{
+            cursor: pointer;
+            font-size: 15px;
+            padding: 6px 30px;
+            border: 1px solid #ffaf84;
+            border-radius: 2px;
+            color: #2b2b2b;
+        }
+        .reg_btn:hover{
+            border: 1px solid #fb7e4c;
+        }
+        .vertical_divider{
+            background: linear-gradient(180deg, rgba(15, 33, 110, 0.919) 11.38%, rgba(56, 97, 135, 0.8) 25.23%, rgb(141, 170, 201) 50.30%, rgb(240, 240, 244) 100%);
+            margin: 40px 0 0 0;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--顶部-->
+    <el-container>
+        <!--logo 登陆/注册链接-->
+        <el-header height="100px" style="margin: 10px 0;padding: 0">
+            <el-row style="margin-top: 10px" type="flex" justify="center">
+                <!--logo-->
+                <el-col :span="8">
+                    <img src="./imgs/logo.png" alt="">
+                </el-col>
+
+                <!--登录/注册-->
+                <el-col :span="8">
+                    <div style="float: right; line-height: 96px">
+                        <a href="javascript:void(0)">登录</a> <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="register.html">注册</a>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--登录注册界面-->
+        <el-row type="flex" justify="center">
+            <!--左边登录块-->
+            <el-col :span="10" style="padding: 40px 200px">
+
+                <div style="padding: 16px 0;">
+                    <div style="text-align: center;font-size: 34px;letter-spacing: 6px;color: #333333;margin-bottom: 30px">登录</div>
+                    <!--用户名登录-->
+                    <div v-if="usernameLogin">
+                        <!--用户名-->
+                        <div style="margin-bottom: 30px;position: relative">
+                            <div class="login_title">GamerSoul 帐户名称</div>
+                            <el-input placeholder="请输入用户名" v-model="user.username" @blur="warnName()"></el-input>
+                        </div>
+                        <!--密码-->
+                        <div style="position: relative">
+                            <div class="login_title">密码</div>
+                            <el-input placeholder="请输入密码" v-model="user.password" @blur="warnPass()" show-password></el-input>
+                        </div>
+                    </div>
+                    <!--电话号码登录-->
+                    <div v-else>
+                        <!--电话号码-->
+                        <div style="margin-bottom: 30px;position: relative">
+                            <div class="login_title">Mobile Phone</div>
+                            <el-input placeholder="请输入电话号码" v-model="user.mem_phone" @blur="warnName()"></el-input>
+                        </div>
+                        <!--密码-->
+                        <div style="position: relative">
+                            <div class="login_title">密码</div>
+                            <el-input placeholder="请输入密码" v-model="user.password" @blur="warnPass()" show-password></el-input>
+                        </div>
+                    </div>
+                    <!--在这台电脑上记住我-->
+                    <div style="overflow: hidden">
+                        <input id="remember" type="checkbox" v-model="user.rem" style="margin: 30px 6px 0 0;float: left;cursor: pointer">
+                        <label for="remember" style="font-size: 14px;cursor: pointer;color: #636363;margin-top: 26px;display: inline-block">在这台电脑上记住我</label>
+                    </div>
+                    <!--登录按钮-->
+                    <div style="text-align: center;margin-top: 40px">
+                        <button class="login_btn" @click="login()">登录</button>
+                    </div>
+                    <!--忘记您的密码?-->
+                    <div style="text-align: center;margin-top: 16px;font-size: 12px;color: #585858;">
+                        <span v-if="usernameLogin" style="cursor: pointer;"><a href="javascript:void(0)" style="color: #585858" @click="changeUsernameLogin()">电话号码登录</a></span>
+                        <span v-else style="cursor: pointer;"><a href="javascript:void(0)" style="color: #585858" @click="changeUsernameLogin()">用户名登录</a></span>
+                        <el-divider direction="vertical"></el-divider>
+                        <span style="cursor: pointer;">忘记您的密码?</span>
+                    </div>
+                </div>
+
+            </el-col>
+            <!--分割线-->
+            <el-divider class="vertical_divider" direction="vertical"></el-divider>
+            <!--右边跳转注册块-->
+            <el-col :span="6" style="padding: 40px 40px;">
+                <div style="padding: 16px 0;">
+                    <div style="text-align: center;font-size: 14px;color: #666666">加入 GamerSoul, 探索数千款精彩游戏。</div>
+                    <div style="text-align: center;font-size: 16px;color: #333333;margin-top: 20px;cursor: pointer">了解更多</div>
+                    <img src="https://store.st.dl.pinyuncloud.com/public/shared/images/login/join_pc.png?v=1" alt="" width="100%">
+                    <div style="text-align: center;font-size: 14px;color: #666666">免费加入且简单易用。</div>
+                    <div style="text-align: center;margin-top: 20px">
+                        <a href="register.html" class="reg_btn">加入GamerSoul</a>
+                    </div>
+                </div>
+            </el-col>
+        </el-row>
+    </el-container>
+
+
+</div>
+
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                inputName: '',
+                inputPass: '',
+                passNull:false,
+                nameNull:false,
+                user:{
+                    username:"",
+                    password:"",
+                    mem_phone: "",
+                    rem:""
+                },
+                usernameLogin:true
+            }
+        },
+        created:function(){
+
+        },
+        methods:{
+            warnName(){
+                if(v.inputName==''){
+                    v.nameNull=true;
+                }else {
+                    v.nameNull=false;
+                }
+            },
+            warnPass(){
+                if(v.inputPass==''){
+                    v.passNull=true;
+                }else {
+                    v.passNull=false;
+                }
+            },
+            login(){
+                if (v.usernameLogin==true){//用户名登录
+                    axios.post("/login",v.user).then(function (response) {
+                        if (response.data==1){
+                            axios.get("/user/selectIdentity?username="+v.user.username).then(function (response) {
+                                if(response.data==0){
+                                    //alert("000");
+                                    location.href="/admin.html"
+                                }else {
+                                    //alert("111");
+                                    location.href="/"
+                                }
+                            })
+                        }else if(response.data==2){
+                            v.$message.error("用户名不存在!");
+                        }else{
+                            v.$message.error("密码错误!");
+                        }
+                    })
+
+                }else {//电话号码登录
+                    axios.post("/phoneLogin",v.user).then(function (response) {
+                        if (response.data==1){
+                            location.href="/";//跳转到首页
+                        }else if(response.data==2){
+                            v.$message.error("电话号码不存在!");
+                        }else{
+                            v.$message.error("密码错误!");
+                        }
+                    })
+                }
+
+            },
+            changeUsernameLogin(){
+                v.usernameLogin = !v.usernameLogin;
+            }
+
+        }
+    })
+
+    //获取cookie里面的数据
+    let cookieStr = document.cookie;
+    let cookieArr = cookieStr.split(";");
+    for (let cookie of cookieArr){
+        let arr = cookie.split("=");
+        let name = arr[0].trim();//trim()去掉空格
+        let value = arr[1];
+        if(name == "username"){
+            v.user.username = value;
+        }else if (name == "password"){
+            v.user.password = value;
+        }
+    }
+</script>
+</body>
+</html>

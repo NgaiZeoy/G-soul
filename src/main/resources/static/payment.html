@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GamerSoul商城</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!--    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+    <script src="js/vue.min.js"></script>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        /*.el-col {
+            border: 1px solid red;
+        }*/
+
+        .d1 {
+            border: 1px solid red;
+            background-color: #FAFAFA;
+        }
+
+        .el-main {
+            padding: 0;
+        }
+
+        #vline {
+            background-color: #b2b2b2;
+        }
+
+        .smallPic:hover {
+            transform: scale(1.1); /*缩放1.1倍*/
+        }
+
+        .b {
+            background: linear-gradient(
+                    90deg, rgb(218, 84, 74) 11.38%, rgb(179, 67, 59) 25.23%, rgb(135, 32, 24) 100%);
+            color: #FAFAFA;
+        }
+
+        .line_divider {
+            background: linear-gradient(90deg, rgba(15, 33, 110, 0.919) 11.38%, rgba(56, 97, 135, 0.8) 25.23%, rgb(240, 240, 244) 100%);
+            margin: 0 0 30px 0;
+        }
+
+        .pay_btn {
+            background-color: #92c288;
+            padding: 4px 20px;
+            color: #f1f1f1;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12px;
+            width: 80px;
+            height: 30px;
+
+        }
+
+        .vertical_divider {
+            background: linear-gradient(180deg, rgba(15, 33, 110, 0.919) 11.38%, rgba(56, 97, 135, 0.8) 25.23%, rgb(141, 170, 201) 50.30%, rgb(240, 240, 244) 100%);
+            margin: 40px 0 0 4px;
+            height: 500px;
+        }
+
+        /*游戏行框架*/
+        .game_frame {
+            width: 600px;
+            border-bottom: 1px solid #2A475E;
+            padding: 12px 20px;
+            margin-top: 20px;
+            margin-left: -60px;
+            overflow: hidden;
+        }
+
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--顶部-->
+    <el-container>
+        <el-header height="100px" style="margin: 10px 0;padding: 0">
+            <el-row style="margin-top: 10px" type="flex" justify="center">
+                <!--logo-->
+                <el-col :span="8">
+                    <img src="./imgs/logo.png" alt="">
+                </el-col>
+                <!--登录/注册-->
+                <el-col :span="8">
+                    <!--已登录-->
+                    <div v-if="isLogin" style="float: right; line-height: 96px;color: #454545">
+                        <span>你好!  {{user.nickname}}</span>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="shopping_car.html">游戏盒</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="javascript:void(0)" @click="logout()">退出登录</a>
+                        <a href="user_info.html"
+                           style="display: block;width:36px;height:36px;margin-top: 26px;float:right;margin-left: 20px;border: 2px solid #da544a;position: relative">
+                            <img :src="user.user_avatar_url" width="100%" height="100%" style="position: absolute;">
+                        </a>
+                    </div>
+                    <!--未登录-->
+                    <div v-else style="float: right; line-height: 96px">
+                        <a href="/login.html">登录</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="/register.html">注册</a>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div class="nav">
+                    <a href="index.html" class="nav_lab">游戏商店</a>
+                    <a href="javascript:void(0)" class="nav_lab" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">游戏分类</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(1)">热销游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(2)">新品游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(3)">优惠游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab">游戏机和配件</a>
+                    <input type="text" placeholder="搜索" v-model="search">
+                    <img src="./imgs/search_icon.png" alt="" @click="searchSend()">
+                </div>
+            </el-col>
+        </el-row>
+
+        <!--悬浮导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div id="suspend_nav" v-show="isShow" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">
+                    <div class="sort_title" v-for="i in sort">
+                        <!--分类标题-->
+                        <div style="float: left;font-weight: bold;">{{i.sort_title}}</div>
+                        <!--分类子项-->
+                        <div style="float: left;width: 1120px;border-bottom: 1px dashed white;padding-bottom: 16px;float: right">
+                            <div class="sort_item" v-for="j in i.sort_item"><a :href="'/classify.html?sort_item='+j">{{j}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </el-col>
+        </el-row>
+        <el-row justify="center" type="flex" style="margin-top: 40px">
+            <el-col :span="16">
+                <div style="font-size: 24px;margin-bottom: 10px">订单信息</div>
+                <el-divider class="line_divider"></el-divider>
+            </el-col>
+        </el-row>
+        <el-row justify="center" type="flex">
+            <!--左侧订单栏-->
+            <el-col :span="10" style="margin-top: 30px">
+                <el-row justify="center" type="flex" v-for="i in gameData">
+                    <div class="game_frame" ref="table">
+                        <!--游戏图片-->
+                        <img style="width: 120px;height: 54px;float: left;display: block;" :src="i.img_title_url">
+                        <!--游戏名-->
+                        <span style="float: left;display: block;color: #333333;font-size: 14px;margin: 6px 0 0 14px;">{{i.name}}</span>
+                        <!--价格-->
+                        <div style="font-size: 14px;float: right;color: #333333;margin-top: 4px;text-align: right;">
+                            {{i.cur_price}}
+                        </div>
+                        <!--操作系统图标-->
+                        <img src="imgs/windows.png" width="20px" height="20px" style="float: right;margin: 6px 40px 0 0;">
+                    </div>
+                </el-row>
+                <!--付款栏-->
+                <el-row justify="center" type="flex">
+                    <div class="game_frame" style="overflow:hidden;">
+                        <div style="float: left;font-size: 14px">合计金额</div>
+                        <div style="float: right;font-size: 14px">{{aggregate}}</div>
+                    </div>
+                </el-row>
+            </el-col>
+            <!--分割线-->
+            <el-col :span="1">
+                <el-divider class="vertical_divider" direction="vertical"></el-divider>
+            </el-col>
+            <!--右侧支付栏-->
+            <el-col :span="5" style="margin-top: 50px">
+                <p style="font-size: 14px">请选择一种支付方式.</p>
+                <template>
+                    <el-select v-model="value" placeholder="请选择">
+                        <el-option
+                                v-for="item in options"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                        </el-option>
+                    </el-select>
+                </template>
+                <p style="font-size: 12px;margin-top: 20px;">无论您身处何地,如果想使用以上支付方式,支付账户必须与由中国人民银行发行的有限银行卡绑定</p>
+                <p style="font-size: 12px;margin-top: 20px">下订单之前,还有机会检查您的订单</p>
+                <div style="margin-top: 50px" v-for="i in order">
+                    <form enctype="multipart/form-data" action="/pay/confirm" method="post">
+                        <input type="hidden" name="order_no" :value="i.order_no">
+                        <button class="pay_btn" type="submit">付款</button>
+                    </form>
+                </div>
+            </el-col>
+        </el-row>
+
+    </el-container>
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<!-- import JavaScript -->
+<script src="js/eui.js"></script>
+<script src="js/axios.min.js"></script>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                categoryArr: [],
+                carouselArr: ["./imgs/carousel1.png"],
+                activeIndex: '1',
+                navArr: ["热销游戏", "新品游戏", "优惠游戏", "游戏机和配件"],
+                options: [{
+                    value: '选项1',
+                    label: '支付宝'
+                }],
+                value: '',
+                order: [],
+                isLogin: false,
+                user: {},
+                gameData: [],
+                aggregate:'',
+                search:"",
+                isShow: false,
+                sort: [{sort_title: "动作", sort_item: ["动作类Rogue", "平台及奔跑", "格斗及武术", "清版动作", "第一人称射击", "第三人称射击", "街机及节奏"]},
+                    {sort_title: "角色扮演", sort_item: ["冒险角色扮演", "动作角色扮演", "回合制", "团队制", "日系角色扮演", "策略角色扮演", "类Rogue"]},
+                    {sort_title: "策略", sort_item: ["军事", "卡牌及桌游", "即时战略", "回合制策略", "城市及定居点", "塔防", "大战略及 4X"]},
+                    {sort_title: "冒险及休闲", sort_item: ["休闲", "冒险", "冒险角色扮演", "剧情丰富", "类银河战士恶魔城", "视觉小说", "解谜"]},
+                    {sort_title: "模拟", sort_item: ["农场及制作", "太空及飞行", "建造及自动化", "恋爱", "沙盒及物理", "爱好与工作", "生活及沉浸式"]},
+                    {sort_title: "体育及竞技", sort_item: ["体育模拟", "单人运动", "团队体育", "所有运动", "竞速", "竞速模拟", "钓鱼及狩猎"]}]
+            }
+        },
+        created: function () {
+            this.aggregate = location.search.split("=")[1];
+            //创建订单
+            axios.get("/pay/addOrder").then(function (response) {
+                v.order = response.data;
+                let orderNo;
+                for (let i of v.order) {
+                    orderNo = i.order_no;
+                }
+                axios.get("/pay/selectOrderGamesByOrderNo?orderNo=" + orderNo).then(function (response) {
+                    v.gameData = response.data;
+                })
+            })
+            //发请求获取当前登录的用户对象,如果有用户对象则代表登录过,反之就是未登录过
+            axios.get("/currentUser").then(function (response) {
+                //把当前登录的用户对象赋值给user
+                v.user = response.data;
+                //此时如果response的值是空字符串 代表未登录过
+                v.isLogin = response.data == "" ? false : true;
+            })
+        },
+        methods: {
+            splitSearch(param){
+                location.href = "split_search.html?param="+param;
+            },
+            /*搜索*/
+            searchSend(){
+                location.href = "result.html?name=" + v.search;
+            },
+            changeTrueShow() {
+                v.isShow = true;
+            },
+            changeFalseShow() {
+                v.isShow = false;
+            },
+            logout() {
+                if (confirm("您确认退出登录吗?退出后将返回至商城首页"))
+                    //发出退出登录请求
+                    axios.get("/logout").then(function (response) {
+                        v.isLogin = false;//修改这个变量 页面会自动跟着改变
+                        location.href = "index.html";
+                    })
+            }
+        }
+    })
+</script>
+</html>

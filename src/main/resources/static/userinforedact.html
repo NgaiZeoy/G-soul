@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户详情页</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!--    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+    <script src="./js/vue.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        /*.el-col{
+            border: 1px solid red;
+        }*/
+        .el-main {
+            padding: 0;
+        }
+
+        #vline {
+            background-color: #b2b2b2;
+        }
+
+        .smallPic:hover {
+            transform: scale(1.1); /*缩放1.1倍*/
+        }
+
+        .p1 {
+            margin: 30px 0 6px 0;
+            color: #e8e8e8;
+            font-size: 20px;
+            background: linear-gradient(90deg, rgba(218, 84, 74, 0.92) 11.38%, rgba(179, 67, 59, 0.8) 25.23%, rgb(240, 240, 244) 100%);
+            padding: 6px;
+        }
+
+        .i1 {
+            width: 656px;
+            margin: 10px 30px 10px 0;
+            display: block;
+            float: left;
+        }
+
+        .el-textarea__inner:focus {
+            border: 1px solid #f98f54;
+        }
+
+        .s1 {
+            background-color: #ffaf84;
+            padding: 6px 20px;
+            cursor: pointer;
+            border: none;
+            display: block;
+            margin-top: 36px;
+            color: #f0f0f0;
+            border-radius: 2px;
+        }
+
+        .s1:hover {
+            background-color: #f98f54;
+            color: #ffffff;
+        }
+
+        .modify {
+            padding: 4px 10px;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--顶部-->
+    <el-container style="height: 1000px">
+        <!--logo 登陆/注册链接-->
+        <el-header height="100px" style="margin: 10px 0;padding: 0">
+            <el-row style="margin-top: 10px" type="flex" justify="center">
+                <!--logo-->
+                <el-col :span="8">
+                    <img src="./imgs/logo.png" alt="">
+                </el-col>
+                <!--登录/注册-->
+                <el-col :span="8">
+                    <!--已登录-->
+                    <div v-if="isLogin" style="float: right; line-height: 96px;color: #454545">
+                        <span>你好!  {{user.nickname}}</span>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="shopping_car.html">游戏盒</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="javascript:void(0)" @click="logout()">退出登录</a>
+                        <a href="user_info.html"
+                           style="display: block;width:36px;height:36px;margin-top: 26px;float:right;margin-left: 20px;border: 2px solid #da544a;position: relative">
+                            <img :src="user.user_avatar_url" width="100%" height="100%" style="position: absolute;">
+                        </a>
+                    </div>
+                    <!--未登录-->
+                    <div v-else style="float: right; line-height: 96px">
+                        <a href="/login.html">登录</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="/register.html">注册</a>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div class="nav">
+                    <a href="index.html" class="nav_lab">游戏商店</a>
+                    <a href="javascript:void(0)" class="nav_lab" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">游戏分类</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(1)">热销游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(2)">新品游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(3)">优惠游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab">游戏机和配件</a>
+                    <input type="text" placeholder="搜索" v-model="search">
+                    <img src="./imgs/search_icon.png" alt="" @click="searchSend()">
+                </div>
+            </el-col>
+        </el-row>
+
+        <!--悬浮导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div id="suspend_nav" v-show="isShow" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">
+                    <div class="sort_title" v-for="i in sort">
+                        <!--分类标题-->
+                        <div style="float: left;font-weight: bold;">{{i.sort_title}}</div>
+                        <!--分类子项-->
+                        <div style="float: left;width: 1120px;border-bottom: 1px dashed white;padding-bottom: 16px;float: right">
+                            <div class="sort_item" v-for="j in i.sort_item"><a :href="'/classify.html?sort_item='+j">{{j}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </el-col>
+        </el-row>
+        <el-row justify="center" type="flex" style="margin-top:10px ">
+            <el-col :span="16">
+                <el-row>
+                    <el-col :span="12">
+                        <p>我的头像</p>
+                        <img :src="imgUrl" style="width: 145px">
+                    </el-col>
+                    <el-col :span="12">
+                        <p>更换头像</p>
+                        <el-upload
+                                action="/upload"
+                                name="picFile"
+                                list-type="picture-card"
+                                :on-preview="handlePictureCardPreview"
+                                :on-success="handleSuccess"
+                                :on-remove="handleRemove"
+                                :limit="1">
+                            <i class="el-icon-plus"></i>
+                        </el-upload>
+                        <el-dialog :visible.sync="dialogVisible">
+                            <img width="100%" :src="dialogImageUrl" alt="">
+                        </el-dialog>
+                    </el-col>
+                </el-row>
+                <el-divider class="line_divider"></el-divider>
+                <el-row justify="center" type="flex">
+                    <el-col :span="12">
+                        <p>我的昵称</p>
+                        <p>{{showNickname}}</p>
+                    </el-col>
+                    <el-col :span="12">
+                        <p>修改昵称</p>
+                        <input type="text" v-model="userDetail.nickname">
+                    </el-col>
+                </el-row>
+                <el-divider class="line_divider"></el-divider>
+                <el-row justify="center" type="flex">
+                    <el-col :span="12">
+                        <p>我的个性签名</p>
+                        <p>{{showSignature}}</p>
+                    </el-col>
+                    <el-col :span="12">
+                        <p>修改个性签名</p>
+                        <input type="text" v-model="userDetail.signature">
+                    </el-col>
+                </el-row>
+                <el-row justify="center" type="flex" style="margin-top: 20px">
+                    <el-col :span="12">
+                    </el-col>
+                    <el-col :span="12">
+                        <button style="width: 100px;height: 30px;margin-top: 5px" @click="amend()">修改</button>
+                    </el-col>
+                </el-row>
+            </el-col>
+        </el-row>
+    </el-container>
+</div>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                carouselArr: ["./imgs/carousel1.png"],
+                activeIndex: '1',
+                navArr: ["热销游戏", "新品游戏", "优惠游戏", "游戏机和配件"],
+                imgId: 1,
+                games: [],
+                userDetail: {
+                    nickname:"",
+                    signature:"",
+                    user_avatar_url:""
+                },
+                imgUrl:"",
+                showNickname:"",
+                showSignature:"",
+                isLogin:false,
+                user:{},
+                search:"",
+                isShow: false,
+                sort: [{sort_title: "动作", sort_item: ["动作类Rogue", "平台及奔跑", "格斗及武术", "清版动作", "第一人称射击", "第三人称射击", "街机及节奏"]},
+                    {sort_title: "角色扮演", sort_item: ["冒险角色扮演", "动作角色扮演", "回合制", "团队制", "日系角色扮演", "策略角色扮演", "类Rogue"]},
+                    {sort_title: "策略", sort_item: ["军事", "卡牌及桌游", "即时战略", "回合制策略", "城市及定居点", "塔防", "大战略及 4X"]},
+                    {sort_title: "冒险及休闲", sort_item: ["休闲", "冒险", "冒险角色扮演", "剧情丰富", "类银河战士恶魔城", "视觉小说", "解谜"]},
+                    {sort_title: "模拟", sort_item: ["农场及制作", "太空及飞行", "建造及自动化", "恋爱", "沙盒及物理", "爱好与工作", "生活及沉浸式"]},
+                    {sort_title: "体育及竞技", sort_item: ["体育模拟", "单人运动", "团队体育", "所有运动", "竞速", "竞速模拟", "钓鱼及狩猎"]}]
+            }
+        },
+        created: function () {
+            axios.get("/userDetail/selectByUserId").then(function (response) {
+                v.userDetail = response.data;
+                v.showNickname = v.userDetail.nickname;
+                v.showSignature = v.userDetail.signature;
+                v.imgUrl = v.userDetail.user_avatar_url;
+            })
+            //发请求获取当前登录的用户对象,如果有用户对象则代表登录过,反之就是未登录过
+            axios.get("/currentUser").then(function (response) {
+                //把当前登录的用户对象赋值给user
+                v.user = response.data;
+                //此时如果response的值是空字符串 代表未登录过
+                v.isLogin = response.data == "" ? false : true;
+            })
+
+        },
+        methods: {
+            splitSearch(param){
+                location.href = "split_search.html?param="+param;
+            },
+            /*搜索*/
+            searchSend(){
+                location.href = "result.html?name=" + v.search;
+            },
+            changeTrueShow() {
+                v.isShow = true;
+            },
+            changeFalseShow() {
+                v.isShow = false;
+            },
+            handleRemove(file, fileList) {
+                console.log(file, fileList);
+                axios.get("/remove?name=" + file.response).then(function (response) {
+                    console.log("删除完成!");
+                })
+                //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+                let arr = [];
+                for (let file of fileList) {
+                    //push往数组中添加元素 file.response图片路径
+                    arr.push(file.response);
+                }
+                //把数组中多个图片路径 合并成一个字符串赋值给urls
+                v.userDetail.user_avatar_url = arr.toString();
+                v.userDetail.user_avatar_url=v.imgUrl;
+
+            },
+            handlePictureCardPreview(file) {
+                this.dialogImageUrl = file.url;
+                this.dialogVisible = true;
+            },
+            handleSuccess(response,file, fileList) {
+                //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+                let arr = [];
+                for (let file of fileList) {
+                    //push往数组中添加元素 file.response图片路径
+                    arr.push(file.response);
+                }
+                //把数组中多个图片路径 合并成一个字符串赋值给urls
+                v.userDetail.user_avatar_url = arr.toString();
+            },
+            amend(){
+                axios.post("/userdetail/update",v.userDetail).then(function (response) {
+                    if (response.data==0){
+                        alert("请先登录")
+                        location.href="/login.html";
+                    }else if(response.data==1){
+                        alert("修改成功")
+
+                        //发请求获取当前登录的用户对象,如果有用户对象则代表登录过,反之就是未登录过
+                        axios.post("/modifyUserSession",v.userDetail).then(function (response) {
+                            //把当前登录的用户对象赋值给user
+                            v.user = response.data;
+                        })
+
+                        location.href="/user_info.html";
+                    }else{
+                        alert("修改失败,请稍后再试")
+                        location.href="/user_info.html";
+                    }
+                })
+
+            },
+            logout() {
+                if (confirm("您确认退出登录吗?退出后将返回至商城首页"))
+                    //发出退出登录请求
+                    axios.get("/logout").then(function (response) {
+                        v.isLogin = false;//修改这个变量 页面会自动跟着改变
+                        location.href="index.html";
+                    })
+            }
+        }
+    })
+</script>
+</body>
+</html>
+<script>
+    import Eui from "./js/eui";
+    export default {
+        components: {Eui}
+    }
+</script>

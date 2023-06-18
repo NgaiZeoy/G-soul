@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>创建您的账户</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!--    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+    <script src="./js/vue.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        /*.el-col{
+            border: 1px solid red;
+        }*/
+        .el-main{
+            padding: 0;
+        }
+        #vline{
+            background-color: #b2b2b2;
+        }
+        .login_title{
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #666666;
+        }
+        .warnText{
+            color: #cc5050;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        .el-input__inner{
+            background-color: #f0f0f4;
+        }
+        .el-input.is-active .el-input__inner, .el-input__inner:focus {
+            border-color: #f98f54;
+            outline: 0;
+        }
+
+        .login_icon{
+            position: absolute;
+            top: 32px;
+            left: 340px;
+        }
+        .reg_btn{
+            font-size: 15px;
+            padding: 6px 60px;
+            background-color: #ffaf84;
+            border: none;
+            border-radius: 2px;
+            letter-spacing: 4px;
+            color: #eaeaea;
+            cursor: pointer;
+        }
+        .reg_btn:hover{
+            background-color: #f98f54;
+            color: #ffffff;
+        }
+        .get_btn{
+            font-size: 14px;
+            padding: 10px 14px;
+            background-color: #ffaf84;
+            border: none;
+            border-radius: 2px;
+            color: #eaeaea;
+            cursor: pointer;
+        }
+        .get_btn:hover{
+            background-color: #f98f54;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--顶部-->
+    <el-container>
+        <!--logo 登陆/注册链接-->
+        <el-header height="100px" style="margin: 10px 0;padding: 0">
+            <el-row style="margin-top: 10px" type="flex" justify="center">
+                <!--logo-->
+                <el-col :span="8">
+                    <img src="./imgs/logo.png" alt="">
+                </el-col>
+                <!--登录/注册-->
+                <el-col :span="8">
+                    <div style="float: right; line-height: 96px">
+                        <a href="login.html">登录</a> <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="javascript:void(0)">注册</a>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--登录注册界面-->
+        <el-row type="flex" justify="center">
+            <!--左边登录块-->
+            <el-col :span="10" style="padding: 40px 200px">
+                <div style="padding: 16px 0;">
+                    <div style="text-align: center;font-size: 34px;letter-spacing: 2px;color: #333333;margin-bottom: 30px">创建您的帐户</div>
+                    <!--GamerSoul 帐户名称-->
+                    <div style="margin-bottom: 30px;position: relative">
+                        <div class="login_title">GamerSoul 帐户名称</div>
+                        <el-input placeholder="输入您的用户名" v-model="newUser.username" @blur="warnPass()"></el-input>
+                    </div>
+                    <!--电话号码-->
+                    <div style="margin-bottom: 30px;position: relative">
+                        <div class="login_title">Mobile Phone</div>
+                        <el-input placeholder="输入您的电话号码" v-model="newUser.mem_phone" @blur="warnName()"></el-input>
+                    </div>
+                    <!--密码-->
+                    <div style="margin-bottom: 30px;position: relative">
+                        <div class="login_title">密码</div>
+                        <el-input placeholder="输入您想要设定的密码" v-model="newUser.password" @blur="warnName()"></el-input>
+                    </div>
+                    <!--手机验证码-->
+                    <div style="position: relative">
+                        <div class="login_title">短信验证码</div>
+                        <el-input placeholder="输入您收到的短信验证码" v-model="newUser.verify_code" style="width: 190px"></el-input>
+                        <el-button class="get_btn" :disabled="!canClick" @click="getVerifyCode()">
+                            <span v-if="canClick">获取验证码</span>
+                            <span v-else>{{getCodeText}}</span>
+                        </el-button>
+                    </div>
+                    <!--我已年满 13 周岁并同意《Valve 隐私政策》的条款。-->
+                    <div style="overflow: hidden">
+                        <input id="remember" type="checkbox" style="margin: 30px 6px 0 0;float: left;cursor: pointer">
+                        <label for="remember" style="font-size: 14px;cursor: pointer;color: #636363;margin-top: 26px;display: inline-block">我已年满 13 周岁并同意《Valve 隐私政策》的条款。</label>
+                    </div>
+                    <!--注册按钮-->
+                    <div style="margin-top: 40px">
+                        <button class="reg_btn" @click="reg()">注册</button>
+                    </div>
+
+                </div>
+            </el-col>
+            <!--右边空着-->
+            <el-col :span="6" style="padding: 40px 40px;"></el-col>
+        </el-row>
+    </el-container>
+
+
+</div>
+
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                inputName: '',
+                inputPass: '',
+                inputConfirm: '',
+                passNull:false,
+                nameNull:false,
+                confirmNull:false,
+                canClick:true,
+                getCodeText:"",
+                totalTime:60,
+                newUser:{
+                    username:"",
+                    mem_phone:"",
+                    password:"",
+                    verify_code:""
+                },
+            }
+        },
+        created:function(){
+
+        },
+        methods:{
+            warnName(){
+                if(v.inputName==''){
+                    v.nameNull=true;
+                }else {
+                    v.nameNull=false;
+                }
+            },
+            warnPass(){
+                if(v.inputPass==''){
+                    v.passNull=true;
+                }else {
+                    v.passNull=false;
+                }
+            },
+            warnConfirm(){
+                if(v.inputConfirm==''){
+                    v.confirmNull=true;
+                }else {
+                    v.confirmNull=false;
+                }
+            },
+            //获取验证码
+            getVerifyCode(){
+                if(v.newUser.username==''||v.newUser.mem_phone==''||v.newUser.password==''){
+                    v.$message.error("抱歉，您有空白处未填！");
+                }else {
+                    this.verificationCode ();//按钮倒计时
+                    axios.post("verify/getVerifyCode",v.newUser).then(function (response) {
+                        if (response.data=="1"){
+                            v.$message.error("用户已存在!");
+                        }else if(response.data=="2"){
+                            v.$message.error("电话号码已被注册!");
+                        }else if(response.data=="4"){
+                            v.$message.error("手机号码格式错误！");
+                        }else {
+                            v.$message({
+                                message: '发送短信成功，请注意查收！',
+                                type: 'success'
+                            });
+                        }
+                    })
+                }
+            },
+            //注册功能
+            reg(){
+                axios.post("/register",v.newUser).then(function (response) {
+                    if (response.data==1){
+                        location.href="login.html";//跳转到登录页面
+                    }else if(response.data==2){
+                        v.$message.error("验证码错误!");
+                    }else if(response.data==3){
+                        v.$message.error("用户已存在!");
+                    }else {
+                        v.$message.error("操作错误，请获取验证码!");
+                    }
+                })
+            },
+            //按钮倒计时
+            verificationCode () {
+                if (!this.canClick) return;
+                v.canClick = false
+                v.getCodeText = this.totalTime + 's后重新发送'
+                let clock = window.setInterval(() => {
+                    v.totalTime--
+                    v.getCodeText = v.totalTime + 's后重新发送'
+                    if (v.totalTime < 0) {
+                        window.clearInterval(clock)
+                        v.getCodeText = '重新发送验证码'
+                        v.totalTime = 60
+                        v.canClick = true
+                    }
+                },1000)
+            }
+        }
+    })
+
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户详情页</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="./js/vue.js"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        /*.el-col{
+            border: 1px solid red;
+        }*/
+        .el-main {
+            padding: 0;
+        }
+
+        #vline {
+            background-color: #b2b2b2;
+        }
+
+        .smallPic:hover {
+            transform: scale(1.1); /*缩放1.1倍*/
+        }
+
+        .p1 {
+            margin: 30px 0 6px 0;
+            color: #e8e8e8;
+            font-size: 16px;
+            background: linear-gradient(90deg, rgba(218, 84, 74, 0.92) 11.38%, rgba(179, 67, 59, 0.8) 25.23%, rgb(240, 240, 244) 100%);
+            padding: 3px 4px 2px 4px;
+            overflow: hidden;
+        }
+
+        .i1 {
+            width: 656px;
+            margin: 10px 30px 10px 0;
+            display: block;
+            float: left;
+        }
+
+        .el-textarea__inner:focus {
+            border: 1px solid #f98f54;
+        }
+
+        .s1 {
+            background-color: #ffaf84;
+            padding: 6px 20px;
+            cursor: pointer;
+            border: none;
+            display: block;
+            margin-top: 36px;
+            color: #f0f0f0;
+            border-radius: 2px;
+        }
+
+        .s1:hover {
+            background-color: #f98f54;
+            color: #ffffff;
+        }
+
+        .modify {
+            padding: 4px 10px;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+        .myItem{
+            display: block;
+            float: left;
+            cursor: pointer;
+            border-radius: 2px;
+            padding: 6px 20px;
+        }
+        .myItem:hover{
+            background-color: #ff5349;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--顶部-->
+    <el-container>
+        <!--logo 登陆/注册链接-->
+        <el-header height="100px" style="margin: 10px 0;padding: 0">
+            <el-row style="margin-top: 10px" type="flex" justify="center">
+                <!--logo-->
+                <el-col :span="8">
+                    <img src="./imgs/logo.png" alt="">
+                </el-col>
+                <!--登录/注册-->
+                <el-col :span="8">
+                    <!--已登录-->
+                    <div v-if="isLogin" style="float: right; line-height: 96px;color: #454545">
+                        <span>你好!  {{user.nickname}}</span>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="shopping_car.html">游戏盒</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="javascript:void(0)" @click="logout()">退出登录</a>
+                        <a href="user_info.html"
+                           style="display: block;width:36px;height:36px;margin-top: 26px;float:right;margin-left: 20px;border: 2px solid #da544a;position: relative">
+                            <img :src="user.user_avatar_url" width="100%" height="100%" style="position: absolute;">
+                        </a>
+                    </div>
+                    <!--未登录-->
+                    <div v-else style="float: right; line-height: 96px">
+                        <a href="/login.html">登录</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="/register.html">注册</a>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div class="nav">
+                    <a href="index.html" class="nav_lab">游戏商店</a>
+                    <a href="javascript:void(0)" class="nav_lab" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">游戏分类</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(1)">热销游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(2)">新品游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab" @click="splitSearch(3)">优惠游戏</a>
+                    <a href="javascript:void(0)" class="nav_lab">游戏机和配件</a>
+                    <input type="text" placeholder="搜索" v-model="search">
+                    <img src="./imgs/search_icon.png" alt="" @click="searchSend()">
+                </div>
+            </el-col>
+        </el-row>
+
+        <!--悬浮导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div id="suspend_nav" v-show="isShow" @mouseenter="changeTrueShow()" @mouseleave="changeFalseShow()">
+                    <div class="sort_title" v-for="i in sort">
+                        <!--分类标题-->
+                        <div style="float: left;font-weight: bold;">{{i.sort_title}}</div>
+                        <!--分类子项-->
+                        <div style="float: left;width: 1120px;border-bottom: 1px dashed white;padding-bottom: 16px;float: right">
+                            <div class="sort_item" v-for="j in i.sort_item"><a :href="'/classify.html?sort_item='+j">{{j}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </el-col>
+        </el-row>
+
+        <el-row type="flex" justify="center">
+            <el-col :span="10" style="padding-top: 20px;padding-bottom: 60px">
+                <!--用户个人信息块-->
+                <div style="overflow:hidden;">
+                    <!--头像-->
+                    <img :src="userDetail.user_avatar_url"
+                         style="display: block;float:left;margin-right: 20px;width: 150px;height: 150px">
+                    <!--个人信息-->
+                    <div style="float: left;margin-top: 8px">
+                        <div style="font-size: 24px;margin-bottom: 4px">{{userDetail.nickname}}</div>
+                        <div style="font-size: 13px;color: #333333">
+                            <span style="margin-right: 8px">{{userDetail.name}}</span>
+                            <!--地区图片-->
+                            <span>
+                                <img :src="userDetail.nation_img_url" alt="">
+                            </span>
+                            <!--地区-->
+                            <span>{{userDetail.nation}}</span>
+                        </div>
+                        <div style="font-size: 13px;color: #333333;margin-top: 40px">{{userDetail.signature}}</div>
+                    </div>
+                </div>
+                <!--我的游戏标题、我的订单标题-->
+                <div class="p1">
+                    <div class="myItem" @click="changeIsShowGamesToTrue()" ref="myGames">我的游戏</div>
+                    <div class="myItem" @click="changeIsShowGamesToFalse()" ref="myOrders">我的订单</div>
+                </div>
+                <!------------------------------------我的游戏块----------------------------------->
+                <div v-if="isShowGames">
+                    <!--游戏行-->
+                    <div v-for="i in games"
+                         style="border-bottom: 1px solid rgba(218, 84, 74, 0.92);overflow:hidden;padding: 0 20px">
+
+                        <el-row>
+                            <a :href="'detail.html?id='+i.game_id">
+                            <img :src="i.img_title_url"
+                                 style="padding-bottom: 10px;margin-top: 20px;display: block;float:left;width: 150px">
+                            </a>
+                            <a href=""
+                               style="color: rgb(51, 51, 51);display: block;float:left;margin: 36px 0 0 16px">{{i.name}}</a>
+                            <div style="margin-top: 70px;text-align: right;font-size: 12px;color: #666666;">
+                                <div>{{i.cur_price}}</div>
+                                <div>{{i.lastRuntime}}</div>
+                            </div>
+                        </el-row>
+                        <el-row >
+                            <div v-for="c in showComment">
+                                <P>{{c.nickname}}</P>
+                                <p>{{c.comment}}</p>
+                            </div>
+                        </el-row>
+                    </div>
+                </div>
+                <!---------------------------------祥哥的个人订单块--------------------------------->
+                <div v-else>
+                    <!--代码插在这里-->
+                    <div v-for="i in orderDetail"
+                         style="border-bottom: 1px solid rgba(218, 84, 74, 0.92);overflow:hidden;padding: 0 20px">
+                        <el-row>
+                            <img :src="i.img_title_url"
+                                 style="padding-bottom: 10px;margin-top: 20px;display: block;float:left;width: 150px">
+                            <a href=""
+                               style="color: rgb(51, 51, 51);display: block;float:left;margin: 36px 0 0 16px">{{i.game_name}}</a>
+                            <div style="margin-top: 25px;text-align: right;font-size: 12px;color: #666666;">
+                                <div>订单号:{{i.order_no}}</div>
+                                <div>{{i.cur_price}}</div>
+                                <div>{{i.trade_status}}</div>
+                                <div>{{i.code}}</div>
+                            </div>
+                        </el-row>
+                    </div>
+                </div>
+            </el-col>
+            <el-col :span="4" style="padding: 28px 0 60px 80px">
+                <!--等级-->
+                <div style="font-size: 24px">
+                    <span>2</span>
+                    <span>级</span>
+                </div>
+                <!--编辑个人资料-->
+                <button class="modify" @click="change()">编辑个人资料</button>
+                <!--好友列表-->
+                <div style="margin-top:118px;padding:14px 0 0 10px">
+                    <!--登录状态-->
+                    <div style="font-size: 20px;color: #57cbde">我的关注</div>
+                    <!--好友列表-->
+                    <div style="color: #333333;font-size: 14px;cursor: pointer;margin-top: 30px;margin-bottom: 10px"></div>
+                    <div v-for="i in friend" style="overflow:hidden;margin-bottom: 20px">
+                        <a :href="'friend.html?userId='+i.user_id">
+                            <img style="display: block;float: left;width: 40px" :src="i.user_avatar_url">
+                            <div style="float:left;font-size: 12px;color: #666666;margin-top: 4px;margin-left: 10px">
+                                <div>{{i.nickname}}</div>
+                                <div>{{i.signature}}</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </el-col>
+        </el-row>
+    </el-container>
+
+
+</div>
+
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                carouselArr: ["./imgs/carousel1.png"],
+                activeIndex: '1',
+                navArr: ["热销游戏", "新品游戏", "优惠游戏", "游戏机和配件"],
+                imgId: 1,
+                games: [],
+                orderDetail:[],
+                userDetail: {
+                    user_id: 0,
+                },
+                friend: {},
+                /*抽屉组件*/
+                drawer: false,
+                game: {},
+                dialogImageUrl: '',
+                dialogVisible: false,
+                gameComment: {
+                    game_id: "",
+                    comment: "",
+                    urls: ""
+                },
+                showComment:[],
+                showGameCommentId:0,
+                isLogin:false,
+                user:{},
+                isShowGames:true,
+                isShowOrder:false,
+                isShow: false,
+                search: '',
+                sort: [{sort_title: "动作", sort_item: ["动作类Rogue", "平台及奔跑", "格斗及武术", "清版动作", "第一人称射击", "第三人称射击", "街机及节奏"]},
+                    {sort_title: "角色扮演", sort_item: ["冒险角色扮演", "动作角色扮演", "回合制", "团队制", "日系角色扮演", "策略角色扮演", "类Rogue"]},
+                    {sort_title: "策略", sort_item: ["军事", "卡牌及桌游", "即时战略", "回合制策略", "城市及定居点", "塔防", "大战略及 4X"]},
+                    {sort_title: "冒险及休闲", sort_item: ["休闲", "冒险", "冒险角色扮演", "剧情丰富", "类银河战士恶魔城", "视觉小说", "解谜"]},
+                    {sort_title: "模拟", sort_item: ["农场及制作", "太空及飞行", "建造及自动化", "恋爱", "沙盒及物理", "爱好与工作", "生活及沉浸式"]},
+                    {sort_title: "体育及竞技", sort_item: ["体育模拟", "单人运动", "团队体育", "所有运动", "竞速", "竞速模拟", "钓鱼及狩猎"]}]
+            }
+        },
+        created: function () {
+            axios.get("/userDetail/selectByUserId").then(function (response) {
+                v.userDetail = response.data;
+            })
+            axios.get("/userDetail/selectGameByUserId?userId").then(function (response) {
+                v.games = response.data
+                for (let i=0;i<v.games.length;i++) {
+
+                }
+            })
+            axios.get("/orderDetail/selectOrderDeatilByUserId?userId").then(function (response) {
+                v.orderDetail = response.data;
+                for (let i=0;i<v.orderDetail.length;i++) {
+
+                }
+            })
+            axios.get("/userDetail/selectFriendByUserId").then(function (response) {
+                v.friend = response.data;
+            })
+            axios.get("/comment/selectById").then(function (response){
+
+            })
+            //发请求获取当前登录的用户对象,如果有用户对象则代表登录过,反之就是未登录过
+            axios.get("/currentUser").then(function (response) {
+                //把当前登录的用户对象赋值给user
+                v.user = response.data;
+                //此时如果response的值是空字符串 代表未登录过
+                v.isLogin = response.data == "" ? false : true;
+            })
+        },
+        methods: {
+            splitSearch(param){
+                location.href = "split_search.html?param="+param;
+            },
+            /*搜索*/
+            searchSend(){
+                location.href = "result.html?name=" + v.search;
+            },
+            changeTrueShow() {
+                v.isShow = true;
+            },
+            changeFalseShow() {
+                v.isShow = false;
+            },
+            changeIsShowGamesToFalse(){
+                v.isShowGames = false;
+                v.isShowOrder = true;
+                if (v.isShowOrder == true){
+                    this.$refs.myOrders.style.background='#ff5349';
+                    this.$refs.myOrders.style.color='white';
+                    this.$refs.myGames.style.background='';
+                    this.$refs.myGames.style.color='#e8e8e8';
+                }
+            },
+            changeIsShowGamesToTrue(){
+                v.isShowGames = true;
+                v.isShowOrder = false;
+                if (v.isShowOrder == false){
+                    this.$refs.myGames.style.background='#ff5349';
+                    this.$refs.myGames.style.color='white';
+                    this.$refs.myOrders.style.background='';
+                    this.$refs.myOrders.style.color='e8e8e8';
+                }
+            },
+            open(id) {
+                v.gameComment.game_id = id;
+                v.drawer = true;
+                axios.get("/game/selectById?gameId=" + id).then(function (response) {
+                    v.game = response.data;
+                })
+            },
+            addCategory() {
+
+            },
+            handleRemove(file, fileList) {
+                console.log(file, fileList);
+                axios.get("/remove?name=" + file.response).then(function (response) {
+                    console.log("删除完成!");
+                })
+                //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+                let arr = [];
+                for (let file of fileList) {
+                    //push往数组中添加元素 file.response图片路径
+                    arr.push(file.response);
+                }
+                //把数组中多个图片路径 合并成一个字符串赋值给urls
+                v.gameComment.urls = arr.toString();
+
+            },
+            handlePictureCardPreview(file) {
+                this.dialogImageUrl = file.url;
+                this.dialogVisible = true;
+            },
+            handleSuccess(response, file, fileList) {
+                //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+                let arr = [];
+                for (let file of fileList) {
+                    //push往数组中添加元素 file.response图片路径
+                    arr.push(file.response);
+                }
+                //把数组中多个图片路径 合并成一个字符串赋值给urls
+                v.gameComment.urls = arr.toString();
+            },
+            send() {
+                //发请求 发布评论
+                axios.post("/insert", v.gameComment).then(function (response) {
+                    if (response.data == 1) {
+                        alert("评论成功!");
+                        location.href = "/user_info.html";
+                    } else {
+                        alert("请先登录!");
+                        location.href = "/login.html";
+                    }
+
+                })
+            },
+            change() {
+                location.href = "/userinforedact.html";
+            },
+            logout() {
+                if (confirm("您确认退出登录吗?退出后将返回至商城首页"))
+                    //发出退出登录请求
+                    axios.get("/logout").then(function (response) {
+                        v.isLogin = false;//修改这个变量 页面会自动跟着改变
+                        location.href="index.html";
+                    })
+            },
+            getId(gameId){
+                axios.get("/comment/selectGameById?gameId="+gameId).then(function (response){
+                    return response.data;
+                })
+            }
+        }
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户详情页</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.min.js"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        /*.el-col{
+            border: 1px solid red;
+        }*/
+        .el-main {
+            padding: 0;
+        }
+
+        #vline {
+            background-color: #b2b2b2;
+        }
+
+        .smallPic:hover {
+            transform: scale(1.1); /*缩放1.1倍*/
+        }
+
+        .p1 {
+            margin: 30px 0 6px 0;
+            color: #e8e8e8;
+            font-size: 20px;
+            background: linear-gradient(90deg, rgba(218, 84, 74, 0.92) 11.38%, rgba(179, 67, 59, 0.8) 25.23%, rgb(240, 240, 244) 100%);
+            padding: 6px;
+        }
+
+        .i1 {
+            width: 656px;
+            margin: 10px 30px 10px 0;
+            display: block;
+            float: left;
+        }
+
+        .el-textarea__inner:focus {
+            border: 1px solid #f98f54;
+        }
+
+        .s1 {
+            background-color: #ffaf84;
+            padding: 6px 20px;
+            cursor: pointer;
+            border: none;
+            display: block;
+            margin-top: 36px;
+            color: #f0f0f0;
+            border-radius: 2px;
+        }
+
+        .s1:hover {
+            background-color: #f98f54;
+            color: #ffffff;
+        }
+
+        .modify {
+            padding: 4px 10px;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--顶部-->
+    <el-container>
+        <!--logo 登陆/注册链接-->
+        <el-header height="100px" style="margin: 10px 0;padding: 0">
+            <el-row style="margin-top: 10px" type="flex" justify="center">
+                <!--logo-->
+                <el-col :span="8">
+                    <img src="./imgs/logo.png" alt="">
+                </el-col>
+                <!--登录/注册-->
+                <el-col :span="8">
+                    <div style="float: right; line-height: 96px">
+                        <a href="">登录</a>
+                        <el-divider id="vline" direction="vertical"></el-divider>
+                        <a href="">注册</a>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+        <!--导航栏-->
+        <el-row type="flex" justify="center">
+            <el-col :span="16">
+                <div class="nav">
+                    <a href="" class="nav_lab" v-for="lab in navArr">{{lab}}</a>
+                    <input type="text" placeholder="搜索">
+                    <img src="./imgs/search_icon.png" alt="">
+                </div>
+            </el-col>
+        </el-row>
+
+        <el-row type="flex" justify="center">
+            <el-col :span="10" style="padding-top: 20px;padding-bottom: 60px">
+                <!--用户个人信息块-->
+                <div style="overflow:hidden;">
+                    <!--头像-->
+                    <img :src="userDetail.user_avatar_url"
+                         style="display: block;float:left;margin-right: 20px;width: 150px">
+                    <!--个人信息-->
+                    <div style="float: left;margin-top: 8px">
+                        <div style="font-size: 24px;margin-bottom: 4px">{{userDetail.nickname}}</div>
+                        <div style="font-size: 13px;color: #333333">
+                            <span style="margin-right: 8px">{{userDetail.name}}</span>
+                            <!--地区图片-->
+                            <span>
+                                <img :src="userDetail.nation_img_url" alt="">
+                            </span>
+                            <!--地区-->
+                            <span>{{userDetail.nation}}</span>
+                        </div>
+                        <div style="font-size: 13px;color: #333333;margin-top: 40px">{{userDetail.signature}}</div>
+                    </div>
+                </div>
+                <!--我的游戏标题-->
+                <div class="p1">我的游戏</div>
+                <!--游戏行-->
+                <div v-for="i in games"
+                     style="border-bottom: 1px solid rgba(218, 84, 74, 0.92);overflow:hidden;padding: 0 20px">
+                    <img :src="i.img_title_url"
+                         style="padding-bottom: 10px;margin-top: 20px;display: block;float:left;width: 150px">
+                    <a href=""
+                       style="color: rgb(51, 51, 51);display: block;float:left;margin: 36px 0 0 16px">{{i.name}}</a>
+                    <div style="margin-top: 70px;text-align: right;font-size: 12px;color: #666666;">
+                        <div>{{i.cur_price}}</div>
+                        <div>{{i.lastRuntime}}</div>
+                    </div>
+                    <!--评论框-->
+<!--                    &lt;!&ndash;抽屉组件开始-->
+<!--                    direction:代表方向rtl(从右到左right to left) / ltr (左到右)/ ttb (上到下)/ btt(下到上)-->
+<!--                    size:弹出内容占屏幕的百分比-->
+<!--                    :visible.sync 让抽屉是否显示和一个变量进行绑定 true显示 false不显示&ndash;&gt;-->
+<!--                    <el-drawer-->
+<!--                            style="text-align: center; margin: 0 auto;"-->
+<!--                            :visible.sync="drawer"-->
+<!--                            direction="btt"-->
+<!--                            size="70%">-->
+<!--                        <div>-->
+<!--                            <p>{{game.name}}</p>-->
+<!--                        </div>-->
+<!--                        <el-upload-->
+<!--                                action="/upload"-->
+<!--                                name="picFile"-->
+<!--                                list-type="picture-card"-->
+<!--                                :on-preview="handlePictureCardPreview"-->
+<!--                                :on-success="handleSuccess"-->
+<!--                                :on-remove="handleRemove">-->
+<!--                            <i class="el-icon-plus"></i>-->
+<!--                        </el-upload>-->
+<!--                        <el-dialog :visible.sync="dialogVisible">-->
+<!--                            <img width="100%" :src="dialogImageUrl" alt="">-->
+<!--                        </el-dialog>-->
+<!--                        <div style="text-align: center; width: 700px; margin-left: 450px" >-->
+<!--                            <el-input class="i1" v-model="gameComment.comment" type="textarea"  :autosize="{ minRows: 2, maxRows: 4}" placeholder="评论点儿啥..."></el-input>-->
+<!--                            <button class="s1" @click="send(i.game_id)">发布</button>-->
+<!--                        </div>-->
+<!--                    </el-drawer>-->
+<!--                    &lt;!&ndash;抽屉组件结束&ndash;&gt;-->
+<!--                    <button class="s1" @click="open(i.game_id)">评论</button>-->
+                </div>
+            </el-col>
+            <el-col :span="4" style="padding: 28px 0 60px 80px">
+                <!--等级-->
+                <div style="font-size: 24px">
+                    <span>2</span>
+                    <span>级</span>
+                </div>
+                <div v-if="attention">
+                    <button style="width: 100px;height: 50px;margin-top: 5px" @click="add()">关注</button>
+                </div>
+                <div v-else>
+                    <button style="width: 100px;height: 50px;margin-top: 5px" @click="remove()">已关注</button>
+                </div>
+                <!--编辑个人资料-->
+
+                <!--好友列表-->
+                <div style="margin-top:118px;padding:14px 0 0 10px">
+                    <!--登录状态-->
+                    <div style="font-size: 20px;color: #57cbde">他的关注</div>
+                    <!--好友列表-->
+
+                    <div style="color: #333333;font-size: 14px;cursor: pointer;margin-top: 30px;margin-bottom: 10px"></div>
+                    <div v-for="i in friend" style="overflow:hidden;margin-bottom: 20px">
+                        <a :href="'friend.html?userId='+i.user_id">
+                        <img style="display: block;float: left;width: 40px" :src="i.user_avatar_url">
+                        <div style="float:left;font-size: 12px;color: #666666;margin-top: 4px;margin-left: 10px">
+                            <div>{{i.nickname}}</div>
+                            <div>{{i.signature}}</div>
+                        </div>
+                        </a>
+                    </div>
+
+                </div>
+            </el-col>
+        </el-row>
+    </el-container>
+</div>
+
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    let v = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                carouselArr: ["./imgs/carousel1.png"],
+                activeIndex: '1',
+                navArr: ["游戏商店", "游戏分类", "热销游戏", "新品游戏", "优惠游戏", "游戏机和配件"],
+                imgId: 1,
+                games: [],
+                userDetail: {
+                    user_id:0,
+                },
+                friend: {},
+                /*抽屉组件*/
+                drawer: false,
+                game:{},
+                dialogImageUrl: '',
+                dialogVisible: false,
+                gameComment:{
+                    game_id:"",
+                    comment:"",
+                    urls:""
+                },
+                attention:true,
+                friendUserId:0
+
+            }
+        },
+        created: function () {
+            let friendId = location.search.split("=")[1];
+            axios.get("/friend/isAttention?friendId="+friendId).then(function (response) {
+                let i = response.data;
+                v.friendUserId = friendId;
+                if (i==0){
+                    v.attention = true;
+                }else{
+                    v.attention = false;
+
+                }
+            })
+            axios.get("/friend/selectByUserId?userId="+friendId).then(function (response) {
+                v.userDetail = response.data;
+            })
+            axios.get("/friend/selectGameByUserId?userId="+friendId).then(function (response) {
+                v.games = response.data;
+            })
+            axios.get("/firend/selectFriendByUserI?userId="+friendId).then(function (response) {
+                v.friend = response.data;
+            })
+
+
+
+        },
+        methods: {
+            // open(id) {
+            //     v.gameComment.game_id=id;
+            //     v.drawer = true;
+            //     axios.get("/game/selectById?gameId="+id).then(function (response) {
+            //             v.game=response.data;
+            //     })
+            // },
+            // handleRemove(file, fileList) {
+            //     console.log(file, fileList);
+            //     axios.get("/remove?name=" + file.response).then(function (response) {
+            //         console.log("删除完成!");
+            //     })
+            //     //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+            //     let arr = [];
+            //     for (let file of fileList) {
+            //         //push往数组中添加元素 file.response图片路径
+            //         arr.push(file.response);
+            //     }
+            //     //把数组中多个图片路径 合并成一个字符串赋值给urls
+            //     v.gameComment.urls = arr.toString();
+            //
+            // },
+            // handlePictureCardPreview(file) {
+            //     this.dialogImageUrl = file.url;
+            //     this.dialogVisible = true;
+            // },
+            // handleSuccess(response,file, fileList) {
+            //     //遍历fileList数组取出数组file对象的图片路径装进一个新的数组里面
+            //     let arr = [];
+            //     for (let file of fileList) {
+            //         //push往数组中添加元素 file.response图片路径
+            //         arr.push(file.response);
+            //     }
+            //     //把数组中多个图片路径 合并成一个字符串赋值给urls
+            //     v.gameComment.urls = arr.toString();
+            // },
+            send(){
+                //发请求 发布评论
+                axios.post("/insert",v.gameComment).then(function (response) {
+                    if (response.data==1){
+                        alert("评论成功!");
+                        v.drawer=false;
+                    }else{
+                        alert("请先登录!");
+                        location.href = "/login.html";
+                    }
+
+                })
+            },
+            add(){
+                let data = new FormData();
+                data.append("friendUserId",v.friendUserId)
+                axios.post("/friend/insert",data).then(function (response) {
+                    if (response.data == 1){
+                        alert("请先登录")
+                        location.href = "/login.html";
+                    }else{
+                        alert("关注成功")
+                        v.attention = false
+                    }
+                })
+            },
+            remove(){
+                let data = new FormData();
+
+                data.append("friendUserId",v.friendUserId)
+                if(confirm("确定取消关注吗?")){
+                    alert(v.friendUserId)
+                    axios.post("/friend/delete", data).then(function (response) {
+
+                        if (response.data==1){
+                            alert("请先登录")
+                            location.href = "/login.html";
+                        }else{
+                            v.attention = true;
+                            location.href="/user_info.html"
+                        }
+                    })
+                }
+
+            }
+        }
+    })
+</script>
+</body>
+</html>

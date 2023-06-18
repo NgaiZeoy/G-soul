@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GamerSoul商城</title>
+  <link rel="stylesheet" href="./css/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!--  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>-->
+  <script src="./js/vue.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <style>
+    .d1 {
+      border: 1px solid red;
+      background-color: #FAFAFA;
+    }
+
+    .el-main {
+      padding: 0;
+    }
+
+    #vline {
+      background-color: #b2b2b2;
+    }
+
+    .smallPic:hover {
+      transform: scale(1.1); /*缩放1.1倍*/
+    }
+
+    .b {
+      background: linear-gradient(
+              90deg, rgb(218, 84, 74) 11.38%, rgb(179, 67, 59) 25.23%, rgb(135, 32, 24) 100%);
+      color: #FAFAFA;
+    }
+
+  </style>
+</head>
+<body>
+<div id="app">
+  <!--&lt;!&ndash;顶部&ndash;&gt;
+  <el-container>
+    <el-header height="100px" style="margin: 10px 0;padding: 0">
+      <el-row style="margin-top: 10px" type="flex" justify="center">
+        &lt;!&ndash;logo&ndash;&gt;
+        <el-col :span="8">
+          <img src="./imgs/logo.png" alt="">
+        </el-col>
+        &lt;!&ndash;登录/注册&ndash;&gt;
+        <el-col :span="8">
+          <div style="float: right; line-height: 96px">
+            <a href="">登录</a> <el-divider id="vline" direction="vertical"></el-divider>
+            <a href="">注册</a>
+          </div>
+        </el-col>
+      </el-row>
+    </el-header>
+    &lt;!&ndash;导航栏&ndash;&gt;
+    <el-row type="flex" justify="center">
+      <el-col :span="16">
+        <div class="nav">
+          <a href="" class="nav_lab" v-for="lab in navArr">{{lab}}</a>
+          <input type="text" placeholder="搜索">
+          <img src="./imgs/search_icon.png" alt="">
+        </div>
+      </el-col>
+    </el-row>
+  </el-container>-->
+
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<!-- import JavaScript -->
+<script src="js/eui.js"></script>
+<script src="js/axios.min.js"></script>
+<script>
+  let v = new Vue({
+    el: '#app',
+    data: function () {
+      return {
+        categoryArr: [],
+        carouselArr: ["./imgs/carousel1.png"],
+        activeIndex: '1',
+        navArr: ["游戏商店", "游戏分类", "热销游戏", "新品游戏", "优惠游戏", "游戏机和配件"]
+
+      }
+    },
+
+    methods: {
+      
+    }
+  })
+</script>
+</html>
